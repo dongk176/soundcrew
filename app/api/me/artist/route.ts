@@ -83,7 +83,6 @@ export async function GET() {
       roles: artist.roles,
       genres: artist.genres,
       mainGenre: artist.mainGenre ?? undefined,
-      mainGenre: artist.mainGenre ?? undefined,
       onlineAvailable: artist.onlineAvailable,
       offlineAvailable: artist.offlineAvailable,
       offlineRegions: artist.offlineRegions,
