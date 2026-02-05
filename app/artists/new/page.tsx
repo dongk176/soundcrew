@@ -131,7 +131,6 @@ const schema = z
     .string()
     .min(10, "짧은 소개를 입력하세요")
     .max(50, "짧은 소개는 50자 이내로 입력해주세요"),
-  mainGenre: z.enum(["POP", "HIPHOP", "RNB", "ELECTRONIC", "ROCK", "ACOUSTIC", "JAZZ", "CINEMATIC", "WORLD", "GOSPEL", "INDIE"]).optional(),
   portfolioText: z.string().optional(),
   roles: z
     .array(
