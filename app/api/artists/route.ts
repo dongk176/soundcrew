@@ -97,7 +97,6 @@ export async function GET() {
       roles: artist.roles.map((role) => mapRoleToLabel[role]),
       genres: artist.genres.map((g) => mapGenreToLabel[g]),
       mainGenre: artist.mainGenre ? mapGenreToLabel[artist.mainGenre] : undefined,
-      mainGenre: artist.mainGenre ? mapGenreToLabel[artist.mainGenre] : undefined,
       onlineAvailable: artist.onlineAvailable,
       offlineAvailable: artist.offlineAvailable,
       offlineRegions: artist.offlineRegions,
