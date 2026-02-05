@@ -164,8 +164,9 @@ const schema = z
   ;
 
 type FormValues = z.infer<typeof schema>;
-type PendingPayload = Omit<FormValues, "portfolioLinks"> & {
+type PendingPayload = Omit<FormValues, "portfolioLinks" | "subGenres"> & {
   portfolioLinks: string[];
+  genres: string[];
   tracks: {
     title?: string;
     sourceType: "UPLOAD";
@@ -439,9 +440,10 @@ export default function NewArtistPage() {
         fileKey: track.fileKey || undefined
       }));
 
+    const { subGenres, ...rest } = data;
     return {
-      ...data,
-      genres: [data.mainGenre, ...(data.subGenres || [])],
+      ...rest,
+      genres: [data.mainGenre, ...(subGenres || [])],
       portfolioText: data.portfolioText?.trim() || undefined,
       portfolioLinks: (data.portfolioLinks || []).filter(Boolean),
       avatarUrl: data.avatarUrl?.trim() ? data.avatarUrl.trim() : undefined,
