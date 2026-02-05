@@ -1,0 +1,344 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNKNOWN
+}
+
+enum JobMode {
+  ONLINE
+  OFFLINE
+  MIXED
+}
+
+enum SettlementType {
+  PER_TASK
+  PER_HOUR
+  PROJECT
+}
+
+enum ExperienceLevel {
+  JUNIOR
+  MID
+  SENIOR
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  REVIEWING
+  ACCEPTED
+  REJECTED
+}
+
+enum ArtistGenre {
+  POP
+  HIPHOP
+  RNB
+  ELECTRONIC
+  ROCK
+  ACOUSTIC
+  JAZZ
+  CINEMATIC
+  WORLD
+  GOSPEL
+  INDIE
+}
+
+enum TrackSourceType {
+  UPLOAD
+  LINK
+}
+
+enum ConsentType {
+  TERMS
+  PRIVACY
+  MARKETING
+}
+
+enum ArtistRole {
+  PRODUCER
+  SINGER
+  MIXING_ENGINEER
+  SONGWRITER
+  MASTERING_ENGINEER
+  SESSION_MUSICIAN
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  image             String?
+  passwordHash      String?
+  isAdmin           Boolean   @default(false)
+  isHost            Boolean   @default(false)
+  allowKakaoNotice  Boolean   @default(false)
+  kakaoUserId       String?   @unique
+  phone             String?
+  phoneVerifiedAt   DateTime?
+  nicknameKey       String?   @unique
+  legalName         String?
+  birthYear         String?
+  birthDay          String?
+  gender            Gender?
+  ageRange          String?
+  usageTickets      Int       @default(0)
+  topExposureTickets Int      @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  profile           Profile?
+  jobs              Job[]      @relation("UserJobs")
+  applications      Application[] @relation("UserApplications")
+  bookmarks         Bookmark[]
+  sentMessages      Message[]  @relation("SentMessages")
+  threadsAsA        MessageThread[] @relation("ThreadUserA")
+  threadsAsB        MessageThread[] @relation("ThreadUserB")
+  reviewsGiven      Review[]   @relation("ReviewAuthor")
+  reviewsReceived   Review[]   @relation("ReviewTarget")
+  artistProfile     ArtistProfile?
+  consents          UserConsent[]
+}
+
+model ArtistProfile {
+  id        String        @id @default(cuid())
+  userId    String?       @unique
+  slug      String        @unique
+  stageName String
+  shortIntro String?
+  portfolioText String?
+  mainGenre ArtistGenre?
+  roles     ArtistRole[]
+  genres    ArtistGenre[]
+  onlineAvailable  Boolean @default(false)
+  offlineAvailable Boolean @default(false)
+  offlineRegions String[] @default([])
+  averageWorkDuration String?
+  portfolioLinks String[] @default([])
+  avatarUrl String?
+  avatarKey String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user   User?        @relation(fields: [userId], references: [id])
+  tracks ArtistTrack[]
+  photos ArtistPhoto[]
+}
+
+model ArtistTrack {
+  id         String          @id @default(cuid())
+  artistId   String
+  title      String?
+  sourceType TrackSourceType
+  url        String
+  fileKey    String?
+  createdAt  DateTime        @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+}
+
+model ArtistPhoto {
+  id        String   @id @default(cuid())
+  artistId  String
+  url       String
+  fileKey   String?
+  isMain    Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  intro         String?
+  tags          String[] @default([])
+  location      String?
+  genre         String?
+  responseRate  Int?     @default(0)
+  responseTime  String?
+  completed     Int?     @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Job {
+  id           String           @id @default(cuid())
+  title        String
+  position     String
+  tags         String[]         @default([])
+  budget       Int
+  location     String
+  mode         JobMode
+  genre        String
+  deadline     DateTime
+  postedAt     DateTime         @default(now())
+  summary      String?
+  requirements String[]         @default([])
+  scope        String[]         @default([])
+  references   String[]         @default([])
+  schedule     String[]         @default([])
+  attachments  String[]         @default([])
+  settlement   SettlementType
+  experience   ExperienceLevel
+  isPublished  Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  clientId     String
+  client       User             @relation("UserJobs", fields: [clientId], references: [id])
+  applications Application[]
+  bookmarks    Bookmark[]
+  threads      MessageThread[]
+  reviews      Review[]
+}
+
+model Application {
+  id            String             @id @default(cuid())
+  jobId         String
+  musicianId    String
+  headline      String
+  message       String
+  portfolioUrl  String
+  quote         Int
+  availability  String
+  status        ApplicationStatus @default(SUBMITTED)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  job           Job     @relation(fields: [jobId], references: [id])
+  musician      User    @relation("UserApplications", fields: [musicianId], references: [id])
+
+  @@unique([jobId, musicianId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  job       Job      @relation(fields: [jobId], references: [id])
+
+  @@unique([userId, jobId])
+}
+
+model MessageThread {
+  id        String   @id @default(cuid())
+  jobId     String?
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  job       Job?     @relation(fields: [jobId], references: [id])
+  userA     User     @relation("ThreadUserA", fields: [userAId], references: [id])
+  userB     User     @relation("ThreadUserB", fields: [userBId], references: [id])
+  messages  Message[]
+
+  @@unique([jobId, userAId, userBId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  threadId  String
+  senderId  String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  thread    MessageThread @relation(fields: [threadId], references: [id])
+  sender    User          @relation("SentMessages", fields: [senderId], references: [id])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  jobId       String?
+  authorId    String
+  targetId    String
+  rating      Int
+  comment     String
+  createdAt   DateTime @default(now())
+
+  job         Job?  @relation(fields: [jobId], references: [id])
+  author      User @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target      User @relation("ReviewTarget", fields: [targetId], references: [id])
+}
+
+model PhoneOtp {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model UserConsent {
+  id        String      @id @default(cuid())
+  userId    String
+  type      ConsentType
+  version   String
+  agreedAt  DateTime    @default(now())
+  ip        String?
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
