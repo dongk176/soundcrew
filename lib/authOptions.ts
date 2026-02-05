@@ -276,7 +276,7 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     async createUser({ user }) {
-      await sendSignupWelcome(user.phone ?? null, user.name ?? null);
+      await sendSignupWelcome((user as any)?.phone ?? null, user.name ?? null);
       try {
         if ((user as any)?.usageTickets && (user as any).usageTickets > 0) return;
         await prisma.user.update({

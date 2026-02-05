@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -239,7 +239,7 @@ async function compressImage(file: File) {
 
 export default function NewArtistPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [editModeFlag, setEditModeFlag] = useState(false);
   const { data: session, status } = useSession();
   const [tracks, setTracks] = useState<TrackItem[]>([]);
   const [uploadingTrack, setUploadingTrack] = useState(false);
@@ -503,7 +503,7 @@ export default function NewArtistPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     if (initialLoaded) return;
-    const shouldEdit = searchParams?.get("edit") === "1";
+    const shouldEdit = editModeFlag;
     const load = async () => {
       try {
         const res = await fetch("/api/me/artist", { cache: "no-store" });
@@ -524,7 +524,6 @@ export default function NewArtistPage() {
             offlineAvailable: data.artist.offlineAvailable ?? false,
             offlineRegions: data.artist.offlineRegions ?? [],
             averageWorkDuration: data.artist.averageWorkDuration ?? "",
-            portfolioText: data.artist.portfolioText ?? "",
             portfolioLinks: data.artist.portfolioLinks ?? [],
             avatarUrl: data.artist.avatarUrl ?? "",
             avatarKey: data.artist.avatarKey ?? ""
@@ -557,7 +556,13 @@ export default function NewArtistPage() {
     };
     if (shouldEdit) load();
     else setInitialLoaded(true);
-  }, [status, initialLoaded, searchParams, form]);
+  }, [status, initialLoaded, editModeFlag, form]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    setEditModeFlag(sp.get("edit") === "1");
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">

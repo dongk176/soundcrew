@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import LoginModal from "@/components/auth/LoginModal";
 
 type AppHeaderProps = {
@@ -25,7 +25,13 @@ export const AppHeader = ({
   const [loginOpen, setLoginOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    setActiveTab(sp.get("tab"));
+  }, [pathname]);
 
   const handleProfileClick = () => {
     if (session?.user?.id) {
@@ -120,13 +126,12 @@ export const AppHeader = ({
             { href: "/me?tab=saved", icon: Bookmark, label: "저장", key: "saved" },
             { href: "/me?tab=profile", icon: UserCircle, label: "마이페이지", key: "profile" }
           ].map((item) => {
-            const tab = searchParams?.get("tab");
             const active =
               item.key === "home"
                 ? pathname === "/"
                 : item.key === "messages"
                 ? pathname?.startsWith("/messages")
-                : pathname?.startsWith("/me") && tab === item.key;
+                : pathname?.startsWith("/me") && activeTab === item.key;
             return (
               <Link
                 key={item.label}

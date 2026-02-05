@@ -3,7 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 import { Artist } from "@/lib/types";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 export default function MePage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [defaultTab, setDefaultTab] = useState("profile");
   const { bookmarks } = useBookmarkStore();
   const [artists, setArtists] = useState<Artist[]>([]);
   const [myArtist, setMyArtist] = useState<Artist | null>(null);
@@ -30,6 +30,12 @@ export default function MePage() {
       }
     };
     load();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    setDefaultTab(sp.get("tab") || "profile");
   }, []);
 
   useEffect(() => {
@@ -69,7 +75,7 @@ export default function MePage() {
           </Button>
         </div>
 
-        <Tabs defaultValue={searchParams?.get("tab") || "profile"} className="mt-6 space-y-6">
+        <Tabs key={defaultTab} defaultValue={defaultTab} className="mt-6 space-y-6">
           <TabsList>
             <TabsTrigger value="profile">내 프로필</TabsTrigger>
             <TabsTrigger value="applications">내 지원</TabsTrigger>
