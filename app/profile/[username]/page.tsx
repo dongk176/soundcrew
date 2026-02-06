@@ -10,7 +10,7 @@ export default function ProfilePage({ params }: { params: { username: string } }
   const user = users.find((item) => item.username === params.username) ?? users[0];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#151a22]">
       <AppHeader showSearch={false} />
       <div className="mx-auto max-w-6xl px-6 pb-16 pt-10">
         <Card className="p-6">

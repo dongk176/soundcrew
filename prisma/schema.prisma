@@ -59,6 +59,18 @@ enum TrackSourceType {
   LINK
 }
 
+enum ArtistRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+}
+
+enum EquipmentCategory {
+  INSTRUMENT
+  GEAR
+}
+
 enum ConsentType {
   TERMS
   PRIVACY
@@ -84,6 +96,9 @@ model User {
   isAdmin           Boolean   @default(false)
   isHost            Boolean   @default(false)
   allowKakaoNotice  Boolean   @default(false)
+  notifyMessage     Boolean   @default(true)
+  notifyRequest     Boolean   @default(true)
+  notifyMarketing   Boolean   @default(false)
   kakaoUserId       String?   @unique
   phone             String?
   phoneVerifiedAt   DateTime?
@@ -110,6 +125,9 @@ model User {
   reviewsGiven      Review[]   @relation("ReviewAuthor")
   reviewsReceived   Review[]   @relation("ReviewTarget")
   artistProfile     ArtistProfile?
+  artistRequests    ArtistRequest[]
+  artistSaves       ArtistSave[]
+  artistViews       ArtistView[]
   consents          UserConsent[]
 }
 
@@ -136,6 +154,13 @@ model ArtistProfile {
   user   User?        @relation(fields: [userId], references: [id])
   tracks ArtistTrack[]
   photos ArtistPhoto[]
+  videos ArtistVideo[]
+  reviews ArtistReview[]
+  rates  ArtistRate[]
+  requests ArtistRequest[]
+  equipment ArtistEquipment[]
+  saves ArtistSave[]
+  views ArtistView[]
 }
 
 model ArtistTrack {
@@ -150,6 +175,79 @@ model ArtistTrack {
   artist ArtistProfile @relation(fields: [artistId], references: [id])
 }
 
+model ArtistVideo {
+  id        String   @id @default(cuid())
+  artistId  String
+  title     String?
+  url       String
+  createdAt DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
+}
+
+model ArtistReview {
+  id         String   @id @default(cuid())
+  artistId   String
+  authorName String
+  authorRole String?
+  authorAvatarUrl String?
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
+}
+
+model ArtistRate {
+  id        String   @id @default(cuid())
+  artistId  String
+  title     String
+  amount    Int
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
+}
+
+model ArtistEquipment {
+  id        String   @id @default(cuid())
+  artistId  String
+  category  EquipmentCategory
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+
+  @@index([artistId])
+}
+
+model ArtistRequest {
+  id            String   @id @default(cuid())
+  artistId      String
+  requesterId   String
+  shortHelp     String
+  description   String
+  referenceLinks String[] @default([])
+  status        ArtistRequestStatus @default(PENDING)
+  threadId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  artist     ArtistProfile @relation(fields: [artistId], references: [id])
+  requester  User          @relation(fields: [requesterId], references: [id])
+  thread     MessageThread? @relation(fields: [threadId], references: [id])
+
+  @@index([artistId])
+  @@index([requesterId])
+}
+
 model ArtistPhoto {
   id        String   @id @default(cuid())
   artistId  String
@@ -162,6 +260,34 @@ model ArtistPhoto {
   artist ArtistProfile @relation(fields: [artistId], references: [id])
 
   @@index([artistId])
+}
+
+model ArtistSave {
+  id        String   @id @default(cuid())
+  artistId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+  user   User          @relation(fields: [userId], references: [id])
+
+  @@unique([artistId, userId])
+  @@index([artistId])
+  @@index([userId])
+}
+
+model ArtistView {
+  id        String   @id @default(cuid())
+  artistId  String
+  viewerId  String?
+  createdAt DateTime @default(now())
+
+  artist ArtistProfile @relation(fields: [artistId], references: [id])
+  viewer User?         @relation(fields: [viewerId], references: [id])
+
+  @@index([artistId])
+  @@index([viewerId])
+  @@index([artistId, createdAt])
 }
 
 model Profile {
@@ -254,6 +380,7 @@ model MessageThread {
   userA     User     @relation("ThreadUserA", fields: [userAId], references: [id])
   userB     User     @relation("ThreadUserB", fields: [userBId], references: [id])
   messages  Message[]
+  artistRequests ArtistRequest[]
 
   @@unique([jobId, userAId, userBId])
 }
@@ -263,6 +390,11 @@ model Message {
   threadId  String
   senderId  String
   body      String
+  attachmentUrl  String?
+  attachmentKey  String?
+  attachmentName String?
+  attachmentType String?
+  attachmentSize Int?
   readAt    DateTime?
   createdAt DateTime @default(now())
 
@@ -320,6 +452,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
+  refresh_token_expires_in Int?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

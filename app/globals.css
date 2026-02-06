@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: #ffffff;
-  --color-fg: #0b0b0c;
-  --color-muted: #6b7280;
-  --color-border: #e5e7eb;
-  --color-surface: #ffffff;
-  --color-accent: #3d5afe;
+  --color-bg: #0f1115;
+  --color-fg: #e7e9ee;
+  --color-muted: #9aa3b2;
+  --color-border: #232936;
+  --color-surface: #151a22;
+  --color-accent: #23d3ff;
 }
 
 * {
@@ -23,9 +23,22 @@ body {
 body {
   margin: 0;
   color: var(--color-fg);
-  background: var(--color-bg);
+  background: radial-gradient(1200px 800px at 10% 0%, rgba(124, 107, 255, 0.12), transparent 55%),
+    radial-gradient(900px 600px at 90% 20%, rgba(124, 107, 255, 0.08), transparent 60%),
+    var(--color-bg);
   font-family: var(--font-body), system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+  background-size: 18px 18px;
+  opacity: 0.35;
+  mix-blend-mode: soft-light;
 }
 
 h1,
@@ -33,7 +46,7 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display), system-ui, sans-serif;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
 }
 
 a {
@@ -42,7 +55,7 @@ a {
 }
 
 ::selection {
-  background: rgba(61, 90, 254, 0.14);
+  background: rgba(35, 211, 255, 0.18);
 }
 
 .focus-ring:focus-visible {
@@ -53,4 +66,24 @@ a {
 .bg-noise {
   background-image: radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.03) 1px, transparent 0);
   background-size: 18px 18px;
+}
+
+/* Reduce overall rounding for a sharper, more professional feel */
+.rounded-3xl {
+  border-radius: 12px !important;
+}
+.rounded-2xl {
+  border-radius: 10px !important;
+}
+.rounded-xl {
+  border-radius: 8px !important;
+}
+.rounded-lg {
+  border-radius: 6px !important;
+}
+.rounded-md {
+  border-radius: 5px !important;
+}
+.rounded {
+  border-radius: 4px !important;
 }

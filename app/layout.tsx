@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import { IBM_Plex_Sans, Barlow_Condensed } from "next/font/google";
 import Providers from "./providers";
 
 const bodyFont = IBM_Plex_Sans({
@@ -8,7 +8,7 @@ const bodyFont = IBM_Plex_Sans({
   weight: ["400", "500", "600"],
   variable: "--font-body"
 });
-const displayFont = Space_Grotesk({
+const displayFont = Barlow_Condensed({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-display"

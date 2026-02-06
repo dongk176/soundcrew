@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { Prisma } from "@prisma/client";
 
 const genreValues = [
   "POP",
@@ -34,10 +35,27 @@ const trackSchema = z.object({
   fileKey: z.string().optional()
 });
 
+const videoSchema = z.object({
+  title: z.string().optional(),
+  url: z.string().url()
+});
+
 const photoSchema = z.object({
   url: z.string().url(),
   fileKey: z.string().optional(),
   isMain: z.boolean().optional(),
+  sortOrder: z.number().int().optional()
+});
+
+const rateSchema = z.object({
+  title: z.string().min(1),
+  amount: z.number().int().min(0),
+  sortOrder: z.number().int().optional()
+});
+
+const equipmentSchema = z.object({
+  category: z.enum(["INSTRUMENT", "GEAR"]),
+  name: z.string().min(1),
   sortOrder: z.number().int().optional()
 });
 
@@ -56,7 +74,10 @@ const createSchema = z.object({
   avatarUrl: z.string().url().optional(),
   avatarKey: z.string().optional(),
   tracks: z.array(trackSchema).max(3).optional(),
-  photos: z.array(photoSchema).max(5).optional()
+  videos: z.array(videoSchema).max(6).optional(),
+  photos: z.array(photoSchema).max(5).optional(),
+  rates: z.array(rateSchema).min(1).max(3).optional(),
+  equipment: z.array(equipmentSchema).max(20).optional()
 });
 
 const mapGenreToLabel: Record<string, string> = {
@@ -85,7 +106,7 @@ const mapRoleToLabel: Record<string, string> = {
 export async function GET() {
   const artists = await prisma.artistProfile.findMany({
     orderBy: { createdAt: "desc" },
-    include: { tracks: true, photos: true }
+    include: { tracks: true, videos: true, photos: true, reviews: { select: { rating: true } } }
   });
 
   return NextResponse.json({
@@ -119,6 +140,20 @@ export async function GET() {
         sourceType: track.sourceType,
         url: track.url
       })),
+      videos: artist.videos.map((video) => ({
+        id: video.id,
+        title: video.title ?? undefined,
+        url: video.url
+      })),
+      reviewCount: artist.reviews.length,
+      avgRating:
+        artist.reviews.length > 0
+          ? Math.round(
+              (artist.reviews.reduce((acc, review) => acc + review.rating, 0) /
+                artist.reviews.length) *
+                10
+            ) / 10
+          : undefined,
       createdAt: artist.createdAt.toISOString()
     }))
   });
@@ -129,6 +164,17 @@ export async function POST(req: Request) {
   const userId = session?.user?.id;
   if (!userId) {
     return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+  }
+
+  const existing = await prisma.artistProfile.findUnique({
+    where: { userId },
+    select: { id: true, slug: true }
+  });
+  if (existing) {
+    return NextResponse.json(
+      { ok: false, error: "ALREADY_EXISTS", artist: { slug: existing.slug } },
+      { status: 409 }
+    );
   }
 
   const body = await req.json();
@@ -147,50 +193,84 @@ export async function POST(req: Request) {
   const mainPhoto =
     data.photos?.find((photo) => photo.isMain) ?? data.photos?.[0];
 
-  const artist = await prisma.$transaction(async (tx) => {
-    const count = await tx.artistProfile.count();
-    const slug = `artist${count + 1}`;
-    return tx.artistProfile.create({
-      data: {
-        slug,
-        userId,
-        stageName: data.stageName,
-        shortIntro: data.shortIntro,
-        roles: data.roles,
-        genres: data.genres,
-        mainGenre: data.mainGenre,
-        onlineAvailable: data.onlineAvailable ?? false,
-        offlineAvailable: data.offlineAvailable ?? false,
-        offlineRegions: data.offlineRegions ?? [],
-        averageWorkDuration: data.averageWorkDuration,
-        portfolioText: data.portfolioText,
-        portfolioLinks: data.portfolioLinks ?? [],
-        avatarUrl: data.avatarUrl ?? mainPhoto?.url,
-        avatarKey: data.avatarKey ?? mainPhoto?.fileKey,
-        photos: data.photos?.length
-          ? {
-              create: data.photos.map((photo, index) => ({
-                url: photo.url,
-                fileKey: photo.fileKey,
-                isMain: photo.isMain ?? index === 0,
-                sortOrder: photo.sortOrder ?? index
-              }))
-            }
-          : undefined,
-        tracks: data.tracks?.length
-          ? {
-              create: data.tracks.map((track) => ({
-                title: track.title,
-                sourceType: track.sourceType,
-                url: track.url,
-                fileKey: track.fileKey
-              }))
-            }
-          : undefined
-      },
-      include: { tracks: true, photos: true }
+  let artist;
+  try {
+    artist = await prisma.$transaction(async (tx) => {
+      const count = await tx.artistProfile.count();
+      const slug = `artist${count + 1}`;
+      return tx.artistProfile.create({
+        data: {
+          slug,
+          userId,
+          stageName: data.stageName,
+          shortIntro: data.shortIntro,
+          roles: data.roles,
+          genres: data.genres,
+          mainGenre: data.mainGenre,
+          onlineAvailable: data.onlineAvailable ?? false,
+          offlineAvailable: data.offlineAvailable ?? false,
+          offlineRegions: data.offlineRegions ?? [],
+          averageWorkDuration: data.averageWorkDuration,
+          portfolioText: data.portfolioText,
+          portfolioLinks: data.portfolioLinks ?? [],
+          avatarUrl: data.avatarUrl ?? mainPhoto?.url,
+          avatarKey: data.avatarKey ?? mainPhoto?.fileKey,
+          photos: data.photos?.length
+            ? {
+                create: data.photos.map((photo, index) => ({
+                  url: photo.url,
+                  fileKey: photo.fileKey,
+                  isMain: photo.isMain ?? index === 0,
+                  sortOrder: photo.sortOrder ?? index
+                }))
+              }
+            : undefined,
+          tracks: data.tracks?.length
+            ? {
+                create: data.tracks.map((track) => ({
+                  title: track.title,
+                  sourceType: track.sourceType,
+                  url: track.url,
+                  fileKey: track.fileKey
+                }))
+              }
+            : undefined,
+          videos: data.videos?.length
+            ? {
+                create: data.videos.map((video) => ({
+                  title: video.title,
+                  url: video.url
+                }))
+              }
+            : undefined,
+          rates: data.rates?.length
+            ? {
+                create: data.rates.map((rate, index) => ({
+                  title: rate.title,
+                  amount: rate.amount,
+                  sortOrder: rate.sortOrder ?? index
+                }))
+              }
+            : undefined,
+          equipment: data.equipment?.length
+            ? {
+                create: data.equipment.map((item, index) => ({
+                  category: item.category,
+                  name: item.name,
+                  sortOrder: item.sortOrder ?? index
+                }))
+              }
+            : undefined
+        },
+        include: { tracks: true, photos: true }
+      });
     });
-  });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({ ok: false, error: "ALREADY_EXISTS" }, { status: 409 });
+    }
+    return NextResponse.json({ ok: false, error: "SERVER_ERROR" }, { status: 500 });
+  }
 
   return NextResponse.json({
     ok: true,

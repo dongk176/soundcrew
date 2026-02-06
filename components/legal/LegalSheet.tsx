@@ -31,7 +31,7 @@ export default function LegalSheet({ open, doc, onClose }: Props) {
       />
       {/* sheet */}
       <div
-        className="fixed inset-x-0 bottom-0 rounded-t-[22px] border-t border-zinc-200 bg-white shadow-[0_-16px_40px_rgba(0,0,0,0.12)]"
+        className="fixed inset-x-0 bottom-0 rounded-t-[22px] border-t border-zinc-200 bg-[#151a22] shadow-[0_-16px_40px_rgba(0,0,0,0.12)]"
         style={{
           paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
           maxHeight: '100svh',

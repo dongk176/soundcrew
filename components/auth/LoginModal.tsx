@@ -2,31 +2,38 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
+import { useGateRouter } from "@/components/common/routeGate";
+
+type Props = {
+  open: boolean;
+  onClose: () => void;
+  callbackUrl?: string;
+  disableClose?: boolean;
+};
 
 export default function LoginModal({
   open,
   onClose,
   callbackUrl,
   disableClose
-}: {
-  open: boolean;
-  onClose: () => void;
-  callbackUrl?: string;
-  disableClose?: boolean;
-}) {
-  const router = useRouter();
+}: Props) {
+  const router = useGateRouter();
   const [mounted, setMounted] = useState(false);
+  const [isLightMode, setIsLightMode] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [kakaoLoading, setKakaoLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const { status } = useSession();
 
   const cb = useMemo(() => callbackUrl ?? "/", [callbackUrl]);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!mounted || !open) return;
     const prev = document.body.style.overflow;
@@ -35,6 +42,22 @@ export default function LoginModal({
       document.body.style.overflow = prev;
     };
   }, [open, mounted]);
+
+  useEffect(() => {
+    if (!mounted || !open) return;
+    const updateTheme = () => {
+      const hasAdminRoot = Boolean(document.querySelector(".admin-root"));
+      if (hasAdminRoot) {
+        setIsLightMode(document.body.classList.contains("admin-light"));
+        return;
+      }
+      setIsLightMode(!document.body.classList.contains("site-dark"));
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [mounted, open]);
 
   useEffect(() => {
     if (!mounted || !open || disableClose) return;
@@ -50,6 +73,15 @@ export default function LoginModal({
     const t = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (status === "authenticated") {
+      onClose?.();
+      router.replace(cb);
+      router.refresh();
+    }
+  }, [status, open, cb, onClose, router]);
 
   if (!mounted || !open) return null;
 
@@ -67,7 +99,8 @@ export default function LoginModal({
 
       if (res?.ok) {
         onClose?.();
-        router.replace((res as any)?.url || cb);
+        const url = (res as any)?.url || cb;
+        router.replace(url);
         router.refresh();
         return;
       }
@@ -100,19 +133,29 @@ export default function LoginModal({
         type="button"
         aria-label={disableClose ? undefined : "닫기"}
         onClick={disableClose ? undefined : onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+        className={`absolute inset-0 backdrop-blur-[2px] ${
+          isLightMode ? "bg-black/40" : "bg-black/60"
+        }`}
       />
 
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm overflow-hidden rounded-lg bg-white text-zinc-900 shadow-2xl ring-1 ring-black/5">
-          <div className="flex items-center justify-between px-5 py-4">
+        <div
+          className={[
+            "w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl ring-1 relative",
+            isLightMode ? "bg-[#151a22] text-zinc-900 ring-black/5" : "bg-zinc-950 text-zinc-100 ring-white/10"
+          ].join(" ")}
+        >
+          <div className="flex items-center justify-between px-4 py-4">
             {disableClose ? (
               <div className="w-6" aria-hidden />
             ) : (
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded p-1 transition hover:bg-zinc-100"
+                className={[
+                  "p-1 rounded transition",
+                  isLightMode ? "hover:bg-zinc-100" : "hover:bg-zinc-800 text-zinc-200"
+                ].join(" ")}
                 aria-label="닫기"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
@@ -131,30 +174,57 @@ export default function LoginModal({
 
           <div className="px-5 pb-5 space-y-4">
             <form onSubmit={handleLogin} className="space-y-3">
-              <label className="block text-sm font-medium text-zinc-700">이메일</label>
+              <label
+                className={`block text-sm font-medium ${
+                  isLightMode ? "text-zinc-700" : "text-zinc-200"
+                }`}
+              >
+                이메일
+              </label>
               <input
                 type="email"
                 required
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
+                className={[
+                  "w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none focus:ring-2",
+                  isLightMode
+                    ? "border-zinc-300 text-zinc-900 focus:ring-zinc-300"
+                    : "border-zinc-800 bg-zinc-900/70 text-zinc-100 focus:ring-zinc-700"
+                ].join(" ")}
               />
 
-              <label className="block text-sm font-medium text-zinc-700">비밀번호</label>
+              <label
+                className={`block text-sm font-medium ${
+                  isLightMode ? "text-zinc-700" : "text-zinc-200"
+                }`}
+              >
+                비밀번호
+              </label>
               <input
                 type="password"
                 required
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-zinc-300 px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-zinc-300"
+                className={[
+                  "w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none focus:ring-2",
+                  isLightMode
+                    ? "border-zinc-300 text-zinc-900 focus:ring-zinc-300"
+                    : "border-zinc-800 bg-zinc-900/70 text-zinc-100 focus:ring-zinc-700"
+                ].join(" ")}
               />
 
               <button
                 type="submit"
                 disabled={loading || !email || !password}
-                className="w-full rounded-lg bg-black px-4 py-3 text-sm font-semibold text-white disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-black/20"
+                className={[
+                  "w-full rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-60 focus:outline-none focus:ring-2",
+                  isLightMode
+                    ? "bg-black text-white focus:ring-black/20 hover:bg-zinc-900"
+                    : "bg-[#151a22] text-zinc-900 focus:ring-white/20 hover:bg-zinc-200"
+                ].join(" ")}
               >
                 {loading ? "로그인 중…" : "로그인"}
               </button>
@@ -163,7 +233,10 @@ export default function LoginModal({
                 type="button"
                 onClick={handleKakao}
                 disabled={kakaoLoading}
-                className="w-full rounded-lg bg-[#FEE500] px-4 py-3 text-sm font-semibold text-black disabled:opacity-60 border border-black/10 hover:brightness-[0.98] focus:outline-none focus:ring-2 focus:ring-black/10 flex items-center justify-center gap-2"
+                className={[
+                  "w-full rounded-xl bg-[#FEE500] px-4 py-3 text-sm font-semibold text-black disabled:opacity-60 border hover:brightness-[0.98] focus:outline-none focus:ring-2 focus:ring-black/10 flex items-center justify-center gap-2",
+                  isLightMode ? "border-black/10" : "border-white/10"
+                ].join(" ")}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -189,7 +262,7 @@ export default function LoginModal({
             }`}
           >
             {toast && (
-              <div className="pointer-events-auto rounded-lg bg-black px-4 py-2 text-sm text-white shadow-lg ring-1 ring-black/10">
+              <div className="pointer-events-auto rounded-xl bg-black px-4 py-2 text-sm text-white shadow-lg ring-1 ring-black/10">
                 {toast}
               </div>
             )}

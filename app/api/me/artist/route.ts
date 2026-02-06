@@ -34,10 +34,27 @@ const trackSchema = z.object({
   fileKey: z.string().optional()
 });
 
+const videoSchema = z.object({
+  title: z.string().optional(),
+  url: z.string().url()
+});
+
 const photoSchema = z.object({
   url: z.string().url(),
   fileKey: z.string().optional(),
   isMain: z.boolean().optional(),
+  sortOrder: z.number().int().optional()
+});
+
+const rateSchema = z.object({
+  title: z.string().min(1),
+  amount: z.number().int().min(0),
+  sortOrder: z.number().int().optional()
+});
+
+const equipmentSchema = z.object({
+  category: z.enum(["INSTRUMENT", "GEAR"]),
+  name: z.string().min(1),
   sortOrder: z.number().int().optional()
 });
 
@@ -56,7 +73,10 @@ const updateSchema = z.object({
   avatarUrl: z.string().url().optional(),
   avatarKey: z.string().optional(),
   tracks: z.array(trackSchema).max(3).optional(),
-  photos: z.array(photoSchema).max(5).optional()
+  videos: z.array(videoSchema).max(6).optional(),
+  photos: z.array(photoSchema).max(5).optional(),
+  rates: z.array(rateSchema).min(1).max(3).optional(),
+  equipment: z.array(equipmentSchema).max(20).optional()
 });
 
 export async function GET() {
@@ -68,7 +88,7 @@ export async function GET() {
 
   const artist = await prisma.artistProfile.findUnique({
     where: { userId },
-    include: { tracks: true, photos: true }
+    include: { tracks: true, photos: true, videos: true, rates: true, equipment: true }
   });
 
   if (!artist) return NextResponse.json({ ok: true, artist: null });
@@ -105,6 +125,27 @@ export async function GET() {
         url: track.url,
         fileKey: track.fileKey ?? undefined
       })),
+      videos: artist.videos.map((video) => ({
+        id: video.id,
+        title: video.title ?? undefined,
+        url: video.url
+      })),
+      rates: artist.rates
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((rate) => ({
+          id: rate.id,
+          title: rate.title,
+          amount: rate.amount,
+          sortOrder: rate.sortOrder
+        })),
+      equipment: artist.equipment
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((item) => ({
+          id: item.id,
+          category: item.category,
+          name: item.name,
+          sortOrder: item.sortOrder
+        })),
       createdAt: artist.createdAt.toISOString()
     }
   });
@@ -142,6 +183,9 @@ export async function PUT(req: Request) {
 
     await tx.artistTrack.deleteMany({ where: { artistId: existing.id } });
     await tx.artistPhoto.deleteMany({ where: { artistId: existing.id } });
+    await tx.artistVideo.deleteMany({ where: { artistId: existing.id } });
+    await tx.artistRate.deleteMany({ where: { artistId: existing.id } });
+    await tx.artistEquipment.deleteMany({ where: { artistId: existing.id } });
 
     return tx.artistProfile.update({
       where: { id: existing.id },
@@ -178,9 +222,35 @@ export async function PUT(req: Request) {
                 fileKey: track.fileKey
               }))
             }
+          : undefined,
+        videos: data.videos?.length
+          ? {
+              create: data.videos.map((video) => ({
+                title: video.title,
+                url: video.url
+              }))
+            }
+          : undefined,
+        rates: data.rates?.length
+          ? {
+              create: data.rates.map((rate, index) => ({
+                title: rate.title,
+                amount: rate.amount,
+                sortOrder: rate.sortOrder ?? index
+              }))
+            }
+          : undefined,
+        equipment: data.equipment?.length
+          ? {
+              create: data.equipment.map((item, index) => ({
+                category: item.category,
+                name: item.name,
+                sortOrder: item.sortOrder ?? index
+              }))
+            }
           : undefined
       },
-      include: { tracks: true, photos: true }
+      include: { tracks: true, photos: true, videos: true }
     });
   });
 
@@ -189,4 +259,36 @@ export async function PUT(req: Request) {
   }
 
   return NextResponse.json({ ok: true, artist: { slug: updated.slug } });
+}
+
+export async function DELETE() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) {
+    return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+  }
+
+  const artist = await prisma.artistProfile.findUnique({
+    where: { userId },
+    select: { id: true }
+  });
+
+  if (!artist) {
+    return NextResponse.json({ ok: false, error: "NOT_FOUND" }, { status: 404 });
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.artistTrack.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistPhoto.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistVideo.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistRate.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistEquipment.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistReview.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistRequest.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistSave.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistView.deleteMany({ where: { artistId: artist.id } });
+    await tx.artistProfile.delete({ where: { id: artist.id } });
+  });
+
+  return NextResponse.json({ ok: true });
 }

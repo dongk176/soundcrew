@@ -43,7 +43,7 @@ export function TermsContent() {
       </ul>
 
       {/* 🔁 제 3 조 교체된 부분 */}
-      <h3 className={sec + ' text-[18px] font-semibold tracking-[0.015em]'}>제 3 조 (회사의 지위 및 역할)</h3>
+      <h3 className={sec + ' text-[18px] font-semibold tracking-[0.015em]'}>제 3 조 (회사의 지위 및 포지션)</h3>
       <ul>
         <li>
           회사는 플랫폼 제공자이며, 서비스 이용의 편의를 위해 호스트와 게스트 간의 정보 연결 및 예약

@@ -48,8 +48,45 @@ export type ArtistRole =
 export type ArtistTrack = {
   id: string;
   title?: string;
-  sourceType: "UPLOAD" | "LINK";
+  sourceType: "UPLOAD";
   url: string;
+};
+
+export type ArtistVideo = {
+  id: string;
+  title?: string;
+  url: string;
+};
+
+export type ArtistReview = {
+  id: string;
+  authorName: string;
+  authorRole?: string;
+  authorAvatarUrl?: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+};
+
+export type ArtistRate = {
+  id: string;
+  title: string;
+  amount: number;
+  sortOrder: number;
+};
+
+export type ArtistRequestStats = {
+  responseRate: number | null;
+  responseTimeMinutes: number | null;
+  completedCount: number;
+  totalRequests: number;
+};
+
+export type ArtistEquipment = {
+  id: string;
+  category: "INSTRUMENT" | "GEAR";
+  name: string;
+  sortOrder: number;
 };
 
 export type Artist = {
@@ -61,6 +98,8 @@ export type Artist = {
   mainGenre?: ArtistGenre;
   roles?: ArtistRole[];
   genres: ArtistGenre[];
+  reviewCount?: number;
+  avgRating?: number;
   onlineAvailable?: boolean;
   offlineAvailable?: boolean;
   offlineRegions?: string[];
@@ -74,7 +113,14 @@ export type Artist = {
     sortOrder: number;
   }[];
   tracks: ArtistTrack[];
+  videos?: ArtistVideo[];
+  reviews?: ArtistReview[];
+  rates?: ArtistRate[];
+  equipment?: ArtistEquipment[];
+  stats?: ArtistRequestStats;
+  joinedAt?: string;
   createdAt?: string;
+  isOwner?: boolean;
 };
 
 export type User = {

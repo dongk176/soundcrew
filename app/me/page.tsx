@@ -57,7 +57,7 @@ export default function MePage() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#151a22]">
       <AppHeader showSearch={false} />
       <div className="mx-auto max-w-6xl px-6 pb-16 pt-10">
         <div className="flex flex-wrap items-center justify-between gap-4">

@@ -35,7 +35,7 @@ export const AppHeader = ({
 
   const handleProfileClick = () => {
     if (session?.user?.id) {
-      router.push("/me");
+      router.push("/dashboard");
       return;
     }
     setLoginOpen(true);
@@ -43,7 +43,7 @@ export const AppHeader = ({
 
   return (
     <>
-      <header className="sticky top-0 z-30 w-full border-b border-border bg-white/80 backdrop-blur">
+      <header className="sticky top-0 z-30 w-full border-b border-border bg-[#151a22]/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-6">
         <Link
           href="/"
@@ -80,33 +80,11 @@ export const AppHeader = ({
             아티스트 등록
           </Button>
           <div className="hidden items-center gap-1 md:flex">
-            {[{
-              href: "/messages",
-              icon: MessageSquare,
-              label: "메시지"
-            },
-            {
-              href: "/me",
-              icon: Bookmark,
-              label: "저장"
-            }].map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  "inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-white text-muted transition hover:text-foreground",
-                  "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-                )}
-                aria-label={item.label}
-              >
-                <item.icon className="h-4 w-4" />
-              </Link>
-            ))}
             <button
               type="button"
               onClick={handleProfileClick}
               className={cn(
-                "inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-white text-muted transition hover:text-foreground",
+                "inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-[#151a22] text-muted transition hover:text-foreground",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
               )}
               aria-label="프로필"
@@ -118,7 +96,7 @@ export const AppHeader = ({
       </div>
         <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} callbackUrl="/me" />
       </header>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 backdrop-blur md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-[#151a22]/95 backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-md items-center justify-between px-6 py-3">
           {[
             { href: "/", icon: Home, label: "홈", key: "home" },

@@ -39,7 +39,10 @@ export const authOptions: NextAuthOptions = {
   debug: !isProd,
   adapter: PrismaAdapter(prisma),
   pages: {
-    signIn: "/signup"
+    signIn: "/login"
+  },
+  pages: {
+    signIn: "/login"
   },
 
   session: {
@@ -52,6 +55,7 @@ export const authOptions: NextAuthOptions = {
     KakaoProvider({
       clientId: process.env.KAKAO_CLIENT_ID!,
       clientSecret: process.env.KAKAO_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           scope:
@@ -279,7 +283,27 @@ export const authOptions: NextAuthOptions = {
 
   events: {
     async createUser({ user }) {
-      await sendSignupWelcome((user as any)?.phone ?? null, user.name ?? null);
+      // Avoid sending welcome multiple times for the same phone/email
+      try {
+        const phone = (user as any)?.phone ?? null;
+        const email = user?.email ?? null;
+        if (phone || email) {
+          const existing = await prisma.user.count({
+            where: {
+              NOT: { id: user.id },
+              OR: [
+                ...(phone ? [{ phone }] : []),
+                ...(email ? [{ email }] : [])
+              ]
+            }
+          });
+          if (existing === 0) {
+            await sendSignupWelcome(phone ?? null, user.name ?? null);
+          }
+        }
+      } catch (e) {
+        console.error("[signup welcome] skip check failed", e);
+      }
       try {
         if ((user as any)?.usageTickets && (user as any).usageTickets > 0) return;
         await prisma.user.update({

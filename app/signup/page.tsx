@@ -216,7 +216,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-[100svh] bg-white">
+    <div className="min-h-[100svh] bg-[#151a22]">
       <AppHeader />
       <main className="mx-auto max-w-md px-5 py-5">
         <div className="space-y-4">

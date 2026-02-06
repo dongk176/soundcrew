@@ -8,7 +8,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 const styles = {
   primary: "bg-foreground text-white hover:opacity-90",
   secondary:
-    "border border-border text-foreground bg-white hover:bg-slate-50",
+    "border border-border text-foreground bg-[#151a22] hover:bg-slate-50",
   ghost: "text-foreground hover:bg-slate-100"
 };
 

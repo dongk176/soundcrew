@@ -151,7 +151,7 @@ export const ArtistCard = ({
       <button
         onClick={() => toggleBookmark(artist.id)}
         className={cn(
-          "absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white",
+          "absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-[#151a22]",
           saved ? "text-accent" : "text-muted"
         )}
         aria-label="아티스트 북마크"
@@ -253,7 +253,7 @@ export const ArtistCard = ({
               <span className="relative group rounded-lg border border-border px-3 py-1 text-xs text-muted">
                 {displayGenres[0]}
                 {artist.genres.length > 1 ? (
-                  <span className="pointer-events-none absolute left-1/2 top-0 z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg border border-border bg-white px-3 py-2 text-xs text-foreground opacity-0 shadow-subtle transition group-hover:opacity-100">
+                  <span className="pointer-events-none absolute left-1/2 top-0 z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg border border-border bg-[#151a22] px-3 py-2 text-xs text-foreground opacity-0 shadow-subtle transition group-hover:opacity-100">
                     {artist.genres.join(" · ")}
                   </span>
                 ) : null}
@@ -268,7 +268,7 @@ export const ArtistCard = ({
               <span className="relative group rounded-lg border border-border px-3 py-1 text-xs text-muted">
                 오프라인 가능
                 {artist.offlineRegions?.length ? (
-                  <span className="pointer-events-none absolute left-1/2 top-0 z-20 w-max -translate-x-1/2 -translate-y-full rounded-lg border border-border bg-white px-3 py-2 text-xs text-foreground opacity-0 shadow-subtle transition group-hover:opacity-100">
+                  <span className="pointer-events-none absolute left-1/2 top-0 z-20 w-max -translate-x-1/2 -translate-y-full rounded-lg border border-border bg-[#151a22] px-3 py-2 text-xs text-foreground opacity-0 shadow-subtle transition group-hover:opacity-100">
                     {artist.offlineRegions.map(regionLabel).join(" / ")}
                   </span>
                 ) : null}
