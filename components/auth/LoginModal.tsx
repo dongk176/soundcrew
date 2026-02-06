@@ -20,7 +20,6 @@ export default function LoginModal({
 }: Props) {
   const router = useGateRouter();
   const [mounted, setMounted] = useState(false);
-  const [isLightMode, setIsLightMode] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,22 +41,6 @@ export default function LoginModal({
       document.body.style.overflow = prev;
     };
   }, [open, mounted]);
-
-  useEffect(() => {
-    if (!mounted || !open) return;
-    const updateTheme = () => {
-      const hasAdminRoot = Boolean(document.querySelector(".admin-root"));
-      if (hasAdminRoot) {
-        setIsLightMode(document.body.classList.contains("admin-light"));
-        return;
-      }
-      setIsLightMode(!document.body.classList.contains("site-dark"));
-    };
-    updateTheme();
-    const observer = new MutationObserver(updateTheme);
-    observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, [mounted, open]);
 
   useEffect(() => {
     if (!mounted || !open || disableClose) return;
@@ -133,17 +116,12 @@ export default function LoginModal({
         type="button"
         aria-label={disableClose ? undefined : "닫기"}
         onClick={disableClose ? undefined : onClose}
-        className={`absolute inset-0 backdrop-blur-[2px] ${
-          isLightMode ? "bg-black/40" : "bg-black/60"
-        }`}
+        className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
       />
 
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div
-          className={[
-            "w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl ring-1 relative",
-            isLightMode ? "bg-[#151a22] text-zinc-900 ring-black/5" : "bg-zinc-950 text-zinc-100 ring-white/10"
-          ].join(" ")}
+          className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-[#232936] bg-[#151a22] text-[#e7e9ee] shadow-2xl"
         >
           <div className="flex items-center justify-between px-4 py-4">
             {disableClose ? (
@@ -152,10 +130,7 @@ export default function LoginModal({
               <button
                 type="button"
                 onClick={onClose}
-                className={[
-                  "p-1 rounded transition",
-                  isLightMode ? "hover:bg-zinc-100" : "hover:bg-zinc-800 text-zinc-200"
-                ].join(" ")}
+                className="rounded p-1 text-[#e7e9ee] transition hover:bg-[#10141b]"
                 aria-label="닫기"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24">
@@ -174,11 +149,7 @@ export default function LoginModal({
 
           <div className="px-5 pb-5 space-y-4">
             <form onSubmit={handleLogin} className="space-y-3">
-              <label
-                className={`block text-sm font-medium ${
-                  isLightMode ? "text-zinc-700" : "text-zinc-200"
-                }`}
-              >
+              <label className="block text-sm font-medium text-[#c1c7d3]">
                 이메일
               </label>
               <input
@@ -187,19 +158,10 @@ export default function LoginModal({
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={[
-                  "w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none focus:ring-2",
-                  isLightMode
-                    ? "border-zinc-300 text-zinc-900 focus:ring-zinc-300"
-                    : "border-zinc-800 bg-zinc-900/70 text-zinc-100 focus:ring-zinc-700"
-                ].join(" ")}
+                className="w-full rounded-xl border border-[#232936] bg-[#10141b] px-3.5 py-2.5 text-sm text-[#e7e9ee] outline-none placeholder:text-[#9aa3b2] focus:ring-2 focus:ring-[#23D3FF]/40"
               />
 
-              <label
-                className={`block text-sm font-medium ${
-                  isLightMode ? "text-zinc-700" : "text-zinc-200"
-                }`}
-              >
+              <label className="block text-sm font-medium text-[#c1c7d3]">
                 비밀번호
               </label>
               <input
@@ -208,23 +170,13 @@ export default function LoginModal({
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={[
-                  "w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none focus:ring-2",
-                  isLightMode
-                    ? "border-zinc-300 text-zinc-900 focus:ring-zinc-300"
-                    : "border-zinc-800 bg-zinc-900/70 text-zinc-100 focus:ring-zinc-700"
-                ].join(" ")}
+                className="w-full rounded-xl border border-[#232936] bg-[#10141b] px-3.5 py-2.5 text-sm text-[#e7e9ee] outline-none placeholder:text-[#9aa3b2] focus:ring-2 focus:ring-[#23D3FF]/40"
               />
 
               <button
                 type="submit"
                 disabled={loading || !email || !password}
-                className={[
-                  "w-full rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-60 focus:outline-none focus:ring-2",
-                  isLightMode
-                    ? "bg-black text-white focus:ring-black/20 hover:bg-zinc-900"
-                    : "bg-[#151a22] text-zinc-900 focus:ring-white/20 hover:bg-zinc-200"
-                ].join(" ")}
+                className="w-full rounded-xl bg-[#23D3FF] px-4 py-3 text-sm font-semibold text-[#151a22] transition hover:bg-[#0FB8E3] disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#23D3FF]/40"
               >
                 {loading ? "로그인 중…" : "로그인"}
               </button>
@@ -233,10 +185,7 @@ export default function LoginModal({
                 type="button"
                 onClick={handleKakao}
                 disabled={kakaoLoading}
-                className={[
-                  "w-full rounded-xl bg-[#FEE500] px-4 py-3 text-sm font-semibold text-black disabled:opacity-60 border hover:brightness-[0.98] focus:outline-none focus:ring-2 focus:ring-black/10 flex items-center justify-center gap-2",
-                  isLightMode ? "border-black/10" : "border-white/10"
-                ].join(" ")}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#232936] bg-[#FEE500] px-4 py-3 text-sm font-semibold text-black transition hover:brightness-[0.98] disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-black/10"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -248,7 +197,7 @@ export default function LoginModal({
               </button>
 
               <div className="text-center pt-1">
-                <a href="/signup" className="text-sm font-semibold text-black hover:opacity-80">
+                <a href="/signup" className="text-sm font-semibold text-[#23D3FF] hover:opacity-80">
                   가입하기
                 </a>
               </div>
@@ -262,7 +211,7 @@ export default function LoginModal({
             }`}
           >
             {toast && (
-              <div className="pointer-events-auto rounded-xl bg-black px-4 py-2 text-sm text-white shadow-lg ring-1 ring-black/10">
+              <div className="pointer-events-auto rounded-xl border border-[#232936] bg-[#0b0d12] px-4 py-2 text-sm text-[#e7e9ee] shadow-lg">
                 {toast}
               </div>
             )}
