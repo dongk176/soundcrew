@@ -113,7 +113,15 @@ export default function HomePage() {
     return match?.[1] ?? null;
   };
 
-  const getPlayableItems = (artist: Artist) => {
+  type PlayableItem = {
+    id: string;
+    url: string;
+    title: string;
+    type: "audio" | "video";
+    videoId?: string | null;
+  };
+
+  const getPlayableItems = (artist: Artist): { items: PlayableItem[] } => {
     const tracks =
       artist.tracks?.map((track) => ({
         id: track.id,
@@ -132,7 +140,7 @@ export default function HomePage() {
         }))
         .filter((video) => !!video.videoId) ?? [];
     return {
-      items: [...tracks, ...videos]
+      items: [...tracks, ...videos] as PlayableItem[]
     };
   };
 

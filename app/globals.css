@@ -9,6 +9,8 @@
   --color-border: #232936;
   --color-surface: #151a22;
   --color-accent: #23d3ff;
+  --font-body: ui-sans-serif;
+  --font-display: ui-sans-serif;
 }
 
 * {

@@ -44,21 +44,22 @@ export async function POST(req: Request) {
   if (!artist?.userId) {
     return NextResponse.json({ ok: false, error: "ARTIST_USER_REQUIRED" }, { status: 400 });
   }
+  const artistUserId = artist.userId;
 
   const result = await prisma.$transaction(async (tx) => {
     let thread = await tx.messageThread.findFirst({
       where: {
         jobId: null,
         OR: [
-          { userAId: userId, userBId: artist.userId },
-          { userAId: artist.userId, userBId: userId }
+          { userAId: userId, userBId: artistUserId },
+          { userAId: artistUserId, userBId: userId }
         ]
       }
     });
 
     if (!thread) {
       thread = await tx.messageThread.create({
-        data: { userAId: userId, userBId: artist.userId }
+        data: { userAId: userId, userBId: artistUserId }
       });
     }
 

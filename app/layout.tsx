@@ -1,18 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Barlow_Condensed } from "next/font/google";
 import Providers from "./providers";
-
-const bodyFont = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-body"
-});
-const displayFont = Barlow_Condensed({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-display"
-});
 
 export const metadata: Metadata = {
   title: "SoundCrew",
@@ -27,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${bodyFont.variable} ${displayFont.variable} ${bodyFont.className} bg-background text-foreground`}
+        className="bg-background text-foreground"
       >
         <Providers>{children}</Providers>
       </body>

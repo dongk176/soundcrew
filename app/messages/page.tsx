@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LoginModal from "@/components/auth/LoginModal";
@@ -62,7 +62,7 @@ const formatTime = (iso: string) => {
   return `${label} ${h}:${minutes}`;
 };
 
-export default function MessagesListPage() {
+function MessagesListContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -340,5 +340,19 @@ export default function MessagesListPage() {
 
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
+  );
+}
+
+export default function MessagesListPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-full items-center justify-center bg-[#151a22] text-sm text-[#9aa3b2]">
+          로딩 중...
+        </div>
+      }
+    >
+      <MessagesListContent />
+    </Suspense>
   );
 }
